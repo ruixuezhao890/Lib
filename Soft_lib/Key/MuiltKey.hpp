@@ -2,18 +2,23 @@
 *********************************************************************
 *********
 * @project_name :new_lib
-* @file : Gpio.cpp
+* @file : MuiltKey.hpp
 * @author : ruixuezhao890
 * @brief : None
 * @attention : None
-* @date : 2024/8/18 
+* @date : 2024/8/20 
 *********************************************************************
 *********
 */
 
 
-#include "Gpio.hpp"
+#ifndef NEW_LIB_MUILTKEY_HPP
+#define NEW_LIB_MUILTKEY_HPP
 
-namespace Io {
 
-} // Io
+class MuiltKey {
+
+};
+
+
+#endif //NEW_LIB_MUILTKEY_HPP
