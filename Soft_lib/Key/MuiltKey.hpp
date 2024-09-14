@@ -17,6 +17,9 @@
 
 
 class MuiltKey {
+private:
+
+public:
 
 };
 

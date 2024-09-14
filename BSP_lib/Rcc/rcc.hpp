@@ -93,6 +93,7 @@ namespace Rcc {
         {
             return 1;                                                /* 时钟初始化失败 */
         }
+        HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
         calculate_clocks(clock_config,clock_src);
         /* STM32F405x/407x/415x/417x Z版本的器件支持预取功能 */
         if (HAL_GetREVID() == 0x1001)

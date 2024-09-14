@@ -16,9 +16,8 @@
 #define NEW_LIB_GPIO_HPP
 #include "stm32f4xx.h"
 #include "BitBand/BitBand.hpp"
-#define EXIT_SET(x) EXTI##x##_IRQn
-
-
+using call_back= void (*)();
+static call_back function[16];
 template <uint32_t Base, uint8_t Pin>
     struct GpioHelper
     {
@@ -224,13 +223,6 @@ template <uint32_t Base, uint8_t Pin>
 
 #endif // GPIOJ_BASE
 
-struct ExtiPrBit : public BitOperater
-{
-    inline ExtiPrBit(uint8_t bitnum) : BitOperater(EXTI->PR, bitnum) {}
-    inline bool is_set(void) const { return bitband; }
-    inline void clear(void) { bitband = 1; }
-};
-
     template <uint32_t Base, uint8_t Pin>
     class Gpio{
     private:
@@ -241,10 +233,12 @@ struct ExtiPrBit : public BitOperater
         static constexpr size_t id = Helper::id;
         static constexpr uint32_t base = Base;
         static constexpr uint16_t pin = (0x01<<(Pin&0x0f));
-        static constexpr IRQn_Type EXTIx =(IRQn_Type)(Pin <= 4 ? 0 + Pin :Pin <= 9 ? EXTI9_5_IRQn :Pin <= 15 ? EXTI15_10_IRQn :0);
+        static constexpr IRQn_Type EXTIx =(IRQn_Type)(Pin <= 4 ? 6+ Pin :Pin <= 9 ? EXTI9_5_IRQn :Pin <= 15 ? EXTI15_10_IRQn :-15);
 
         static constexpr bool is_valid = Helper::is_valid;
         static_assert(is_valid, "Invalid Base or Pin");
+
+
 /****************************************************************************************************************************************/
         struct Over{
             static void verify(){
@@ -280,8 +274,8 @@ struct ExtiPrBit : public BitOperater
 
 /*******************************************************************************************************************************************************************/
         static void clock(bool enable);
-        static void clock_enable(bool enable);
-        static void clock_disable(bool enable);
+        static void clock_enable();
+        static void clock_disable();
 
         template<uint8_t mode>
         static inline void set_mode(uint8_t speed,uint8_t pull,uint8_t alt){
@@ -338,6 +332,11 @@ struct ExtiPrBit : public BitOperater
 
         static void disable_interrupt();
 
+        static void exti_add_callback_function(call_back set_callback){
+            if (!function[Pin]){
+                function[Pin]=set_callback;
+            }
+        }
 
        /******************************************************************************************************************************************************************/
     };
@@ -567,13 +566,13 @@ inline typename Gpio<Base, Pin>::Over Gpio<Base, Pin>::Output::alternate_open_dr
     }
 
     template<uint32_t Base, uint8_t Pin>
-    void Gpio<Base, Pin>::clock_enable(bool enable) {
+    void Gpio<Base, Pin>::clock_enable() {
         Helper::clock(true);
     }
 
     template<uint32_t Base, uint8_t Pin>
-    void Gpio<Base, Pin>::clock_disable(bool enable) {
-        Helper::clock(false);
+    void Gpio<Base, Pin>::clock_disable() {
+        HAL_GPIO_DeInit(instance_,pin);
     }
 
 template <uint8_t mode, typename... Ts>
@@ -664,6 +663,7 @@ template <uint8_t mode, typename... Ts>
     void Gpio<Base, Pin>::disable_interrupt() {
         __NVIC_DisableIRQ(EXTIx);
     }
+
 
 
 #endif //NEW_LIB_GPIO_HPP
