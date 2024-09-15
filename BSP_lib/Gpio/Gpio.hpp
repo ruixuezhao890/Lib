@@ -17,7 +17,7 @@
 #include "stm32f4xx.h"
 #include "BitBand/BitBand.hpp"
 using call_back= void (*)();
-static call_back function[16];
+extern  call_back function[16];
 template <uint32_t Base, uint8_t Pin>
     struct GpioHelper
     {
@@ -333,9 +333,9 @@ template <uint32_t Base, uint8_t Pin>
         static void disable_interrupt();
 
         static void exti_add_callback_function(call_back set_callback){
-            if (!function[Pin]){
+
                 function[Pin]=set_callback;
-            }
+
         }
 
        /******************************************************************************************************************************************************************/

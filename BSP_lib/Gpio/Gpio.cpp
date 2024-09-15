@@ -11,7 +11,7 @@
 *********
 */
 #include "Gpio.hpp"
-
+call_back function[16];
 extern "C" {
 void EXTI0_IRQHandler(){
     function[0]();
@@ -22,7 +22,12 @@ void EXTI1_IRQHandler(void) {
     function[1]();
 }
 void EXTI2_IRQHandler(void) {
-    function[2]();
+    if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_2) != RESET) {
+        __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_2);
+        if (function[2]) {
+            function[2]();
+        }
+    }
 }
 void EXTI3_IRQHandler(void) {
     function[3]();
