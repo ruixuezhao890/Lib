@@ -272,6 +272,27 @@ template <uint32_t Base, uint8_t Pin>
         static Output into_output_high_mhz();
         static Output into_output_very_high_mhz();
 
+        struct GpioIdrBit:public BitOperator{
+            inline GpioIdrBit(): BitOperator(&instance_->IDR,Pin){};
+            inline bool is_set(){return aliasAddr_;};
+        };
+
+        struct GpioOdrBit:public BitOperator{
+            inline GpioOdrBit(): BitOperator(&instance_->ODR,Pin){};
+            inline bool is_set(){return aliasAddr_;};
+            inline GpioOdrBit& operator=(uint32_t other){
+                if (other){
+                    set();
+                }else{
+                    clear();
+                }
+                return *this;
+            };
+        };
+
+        static const GpioIdrBit idrBit;
+
+        static GpioOdrBit odrBit;
 /*******************************************************************************************************************************************************************/
         static void clock(bool enable);
         static void clock_enable();
@@ -288,23 +309,35 @@ template <uint32_t Base, uint8_t Pin>
         }
 
        static inline void set(){
-           instance_->BSRR=pin;
-
+//           instance_->BSRR=pin;
+            odrBit=1;
        }
 
        static inline void toggle(){
-           auto odr = instance_->ODR;
-
-           instance_->BSRR = ((odr & pin) << 16U) | (~odr & pin);
+//           auto odr = instance_->ODR;
+//
+//           instance_->BSRR = ((odr & pin) << 16U) | (~odr & pin);
+            odrBit= !odrBit;
        }
 
        static inline void reset(){
-           auto t=1<<(Pin&0x0f);
-           instance_->BSRR=(uint32_t )(t)<<16U;
+//           auto t=1<<(Pin&0x0f);
+//           instance_->BSRR=(uint32_t )(t)<<16U;
+            odrBit=0;
        }
        static inline bool read(){
-         return (instance_->IDR & (pin))!= 0;
+           return (bool)idrBit.read();
+//         return (instance_->IDR & (pin))!= 0;
        }
+
+       static inline bool is_high(){
+           return idrBit == 1;
+       }
+
+       static inline bool is_low(){
+           return idrBit == 0;
+       }
+
        static inline bool lock(){
            __IO uint32_t tmp = GPIO_LCKR_LCKK;
             auto PIN=(pin);
@@ -460,6 +493,11 @@ template <uint32_t Base, uint8_t Pin>
     template <uint32_t Base, uint8_t Pin>
     GPIO_InitTypeDef Gpio<Base, Pin>::gpio_initTypeDef{0};
 
+    template <uint32_t Base, uint8_t Pin>
+    const typename Gpio<Base, Pin>::GpioIdrBit Gpio<Base, Pin>::idrBit;
+
+    template <uint32_t Base, uint8_t Pin>
+    typename Gpio<Base, Pin>::GpioOdrBit Gpio<Base, Pin>::odrBit;
 
     template<uint32_t Base, uint8_t Pin>
     inline typename Gpio<Base, Pin>::Input Gpio<Base, Pin>::into_input() {

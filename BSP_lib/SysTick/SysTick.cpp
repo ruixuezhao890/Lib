@@ -12,7 +12,7 @@
 */
 
 
-#include "sys_tick.hpp"
+#include "SysTick.hpp"
 
 void SysSetTick::delay(uint32_t nms)  {
     while (nms)

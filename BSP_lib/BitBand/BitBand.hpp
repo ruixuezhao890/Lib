@@ -16,28 +16,71 @@
 #define NEW_LIB_BITBAND_HPP
 
 #include <cstdint>
-#include "stddef.h"
-// 把“位带地址+位序号”转换成别名地址的宏
-#define BITBAND(addr, bitnum) (((addr) & 0xF0000000) + 0x02000000 + (((addr) & 0x000FFFFF) << 5) + ((bitnum) << 2))
+#include <cstddef>
+class BitOperator {
+protected:
+    // 设置位为1
+    void set() const {
+        *reinterpret_cast<volatile uint32_t*>(aliasAddr_) = 1;
+    }
 
-// 把一个地址转换成一个指针指向的内容
-#define MEM_ADDR(addr) *((volatile uint32_t *)(addr))
+    // 清除位为0
+    void clear() const {
+        *reinterpret_cast<volatile uint32_t*>(aliasAddr_) = 0;
+    }
 
-// 把位带别名区地址转换成指针
-#define BIT_ADDR(addr, bitnum) MEM_ADDR(BITBAND((addr), (bitnum)))
-struct BitOperater {
-    volatile uint32_t &bitband;
+public:
+    // 构造函数，初始化需要操作的寄存器地址和位数
+    BitOperator(volatile uint32_t* regAddr, uint8_t bitNum)
+            : regAddr_(regAddr), bitNum_(bitNum) {
+        aliasAddr_ = calcBitBandAlias((uintptr_t)regAddr_, bitNum_);
+    }
+    // 读取位值
+    bool read() const {
+        return bool(*reinterpret_cast<volatile uint32_t*>(aliasAddr_));
+    }
 
-    BitOperater(uint32_t address, uint8_t bitnum) : bitband(BIT_ADDR(address, bitnum)) {}
-    friend bool operator==(const BitOperater &lhs, const BitOperater &rhs) { return lhs.bitband == rhs.bitband; }
-    friend bool operator==(const BitOperater &lhs, uint32_t rhs) { return lhs.bitband == rhs; }
-    friend bool operator==(uint32_t lhs, const BitOperater &rhs) { return lhs == rhs.bitband; }
-    friend bool operator!=(const BitOperater &lhs, const BitOperater &rhs) { return lhs.bitband != rhs.bitband; }
-    friend bool operator!=(const BitOperater &lhs, uint32_t rhs) { return lhs.bitband != rhs; }
-    friend bool operator!=(uint32_t lhs, const BitOperater &rhs) { return lhs != rhs.bitband; }
-    bool operator!(void) const { return !bitband; }
-    operator uint32_t(void) const { return bitband; }
+    // 重载 == 操作符
+    bool operator==(const BitOperator& other) const {
+        // 比较寄存器地址和位号
+        return (regAddr_ == other.regAddr_) && (bitNum_ == other.bitNum_);
+    }
+
+    bool operator==(bool other) const{
+        return read()==other;
+    }
+
+    // 重载 != 操作符
+    bool operator!=(const BitOperator& other) const {
+        // 使用 == 的结果取反
+        return !(*this == other);
+    }
+
+    // 重载 ! 操作符
+    bool operator!() const {
+        // 位为0时返回 true
+        return !read();
+    }
+
+    // 重载 = 操作符，实现位的赋值
+    virtual BitOperator& operator=(uint8_t value) {
+        if (value) {
+            set();    // 设置位为1
+        } else {
+            clear();  // 清除位为0
+        }
+        return *this;
+    }
+
+protected:
+    volatile uint32_t* regAddr_;  // 原始寄存器地址
+    uint8_t bitNum_;              // 位号
+    uintptr_t aliasAddr_;         // 位带别名地址
+
+    // 计算位带别名地址
+    static uintptr_t calcBitBandAlias(uintptr_t regAddr, uint8_t bitNum) {
+        // 基础地址
+        return PERIPH_BB_BASE + ((regAddr - PERIPH_BASE) * 32) + (bitNum * 4);
+    }
 };
-
-
 #endif //NEW_LIB_BITBAND_HPP

@@ -12,7 +12,7 @@
 */
 
 
-#include "rcc.hpp"
+#include "Rcc.hpp"
 #include "main.h"
 
 #ifndef HSE

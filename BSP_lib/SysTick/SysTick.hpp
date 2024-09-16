@@ -12,8 +12,8 @@
 */
 
 
-#ifndef NEW_LIB_SYS_TICK_HPP
-#define NEW_LIB_SYS_TICK_HPP
+#ifndef NEW_LIB_SYSTICK_HPP
+#define NEW_LIB_SYSTICK_HPP
 #include "stm32f4xx.h"
 
 namespace SysSetTick{
@@ -53,4 +53,4 @@ void assert_failed(uint8_t* file, uint32_t line)
     }
 }
 #endif
-#endif //NEW_LIB_SYS_TICK_HPP
+#endif //NEW_LIB_SYSTICK_HPP
